@@ -69,7 +69,7 @@ Now that the root node has the results of evaluating both its operands, it can r
 
  ![Expression tree](doc/img/expr-eval-5.png)
  
-##Parsing Expressions
+## Parsing Expressions
 
 Module *rpn_parse* parses expressions and calls constructors in *expr* to build the expression tree. 
 First it calls the *lexer* to produce a stream of tokens, which are the individual symbols in the input line labeled with their category (e.g., a binary operator) and the corresponding class in *expr*.  
