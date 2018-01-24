@@ -1,4 +1,4 @@
-#Symbolic calculator
+# Symbolic calculator
 
 Usage:  ```python3 calc.py```
 
