@@ -114,110 +114,6 @@ class Assign(Expr):
         return val
 
 
-# class BinOp(Expr):
-#     """Abstract superclass for binary expressions like plus, minus.
-#     These operations apply to numeric constants (Const nodes) and
-#     return numeric constants.
-#     """
-#
-#     def __init__(self, left, right):
-#         """A binary operation has a left and right sub-expression"""
-#         assert isinstance(left, Expr)
-#         assert isinstance(right, Expr)
-#         self.left = left
-#         self.right = right
-#
-#     def eval(self, env: Env):
-#         """Evaluation strategy for binary operations
-#         that apply to numbers and produce numbers.
-#         """
-#         log.debug("Evaluating {} in BinOp".format(self))
-#         lval = self.left.eval(env)
-#         assert isinstance(lval, Const), "Op {} applies to numbers, not to {}".format(
-#           type(self).__name__, lval)
-#         lval_n = lval.value()
-#         rval = self.right.eval(env)
-#         assert isinstance(lval, Const), "Op {} applies to numbers, not to {}".format(
-#           type(self).__name__, rval)
-#         rval_n = rval.value()
-#         return Const(self._apply(lval_n, rval_n))
-#
-#     def _apply(self, left: Real, right: Real) -> Real:
-#         """Apply operation to numeric values.  Each concrete
-#         subclass of BinOp must define this method.
-#         Note: In Python, 'int' and 'float' are subtypes of Real.
-#         """
-#         raise NotImplementedError(
-#             "Class {} has not defined its _apply method".format(type(self)))
-#
-#     def __eq__(self, other):
-#         """Identical expression"""
-#         return isinstance(self, type(other)) \
-#             and self.left == other.left \
-#             and self.right == other.right
-#
-#
-# class Plus(BinOp):
-#     """Represents the expression A + B"""
-#
-#     def _apply(self, left: Real, right: Real) -> Real:
-#         """Addition of two numeric values (Const nodes)"""
-#         return left + right
-#
-#     def __repr__(self):
-#         return "Plus({},{})".format(repr(self.left), repr(self.right))
-#
-#     def __str__(self):
-#         """Print fully parenthesized"""
-#         return "({} + {})".format(self.left, self.right)
-#
-#
-# class Minus(BinOp):
-#     """Represents the expression A - B"""
-#
-#     def _apply(self, left: Real, right: Real) -> Real:
-#         """Subtraction of two numbers (int or float)"""
-#         return left - right
-#
-#     def __repr__(self):
-#         return "Minus({},{})".format(repr(self.left), repr(self.right))
-#
-#     def __str__(self):
-#         """Print fully parenthesized"""
-#         return "({} - {})".format(self.left, self.right)
-#
-#
-# class Times(BinOp):
-#     """Represents the expression A * B"""
-#     # __init__ is inherited from BinOp
-#
-#     def _apply(self, left: Real, right: Real):
-#         """Addition of two numeric values"""
-#         return left * right
-#
-#     def __repr__(self):
-#         return "Times({},{})".format(repr(self.left), repr(self.right))
-#
-#     def __str__(self):
-#         """Print fully parenthesized"""
-#         return "({} * {})".format(self.left, self.right)
-#
-#
-# class Div(BinOp):
-#     """Exact division (not truncating) of two numeric values"""
-#
-#     def _apply(self, left: Real, right: Real):
-#         """Addition of two numeric values (Const nodes)"""
-#         return left / right
-#
-#     def __repr__(self):
-#         return "Div({},{})".format(repr(self.left), repr(self.right))
-#
-#     def __str__(self):
-#         """Print fully parenthesized"""
-#         return "({}/{})".format(self.left, self.right)
-#
-
 class UnOp(Expr):
     """Abstract superclass for unary expressions like negation"""
 
@@ -253,3 +149,6 @@ class Neg(UnOp):
     def __str__(self):
         """Print fully parenthesized"""
         return "~{}".format(self.left)
+
+# FIXME:  We also need binary operators.  You need an abstract class
+# BinOp and a set of concrete subclasses Plus, Minus, Times, Div
