@@ -1,12 +1,11 @@
 """
 Postfix, a.k.a. Reverse Polish Notation (RPN) parser
-for a symbolic calculator.  Produces
-Expr objects.
+for a symbolic calculator.  Produces 
+Expr objects. 
 
-Author: FIXME
+Author: Initial version by M Young
 """
-import typing
-import re
+from typing import List
 import expr
 import syntax
 import lexer
@@ -22,12 +21,12 @@ class InputError(Exception):
 
 
 def parse(s: str) -> expr.Expr:
-    """Parse s, which should be a sequence of
+    """Parse s, which should be a sequence of 
     blank-separated tokens in RPN, into an Expr
-    object.   Example: parse('3 4 * x +') =>
+    object.   Example: parse('3 4 * x +') => 
     Plus(Times(Const(3), Const(4)), Var('x'))
     """
-    stack = []
+    stack: List[expr.Expr] = [ ]
     stream = lexer.Token_Stream(s)
     while stream.has_more():
         token = stream.take()
@@ -37,16 +36,22 @@ def parse(s: str) -> expr.Expr:
             right = stack.pop()
             left = stack.pop()
             op_class = token.clazz
-            if not isinstance(left, expr.Var):
+            if not isinstance(right, expr.Var):
                 raise InputError("First operand of assignment must be" +
-                                 " a variable, not {}".format(left))
+                                 " a variable, not {}".format(right))
             node = op_class(left, right)
             stack.append(node)
-        # FIXME: You need a case for BINOP
+        elif token.kind == syntax.BINOP: 
+            if len(stack) < 2:
+                raise InputError("Insufficient operands for {}".format(token))
+            right = stack.pop()
+            left = stack.pop()
+            op_class = token.clazz
+            node = op_class(left, right)
+            stack.append(node)
         elif token.kind == syntax.UNOP:
             if len(stack) < 1:
-                raise InputError("Insufficient operands for {}"
-                                 .format(token))
+                raise InputError("Insufficient operands for {}".format(token))
             left = stack.pop()
             op_class = token.clazz
             node = op_class(left)
@@ -60,3 +65,4 @@ def parse(s: str) -> expr.Expr:
     if len(stack) == 0:
         raise InputError("Empty expression")
     return stack[0]
+
