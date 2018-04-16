@@ -122,6 +122,11 @@ class UnOp(Expr):
         assert isinstance(left, Expr)
         self.left = left
 
+    def __eq__(self, other):
+        """Identical expression"""
+        return type(self) == type(other) \
+            and self.left == other.left 
+
     def eval(self, env: Env) -> Const:
         """Evaluation strategy for unary expressions"""
         log.debug("Evaluating {} in UnOp".format(self))
