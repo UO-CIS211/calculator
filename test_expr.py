@@ -14,8 +14,8 @@ class TestExpr(unittest.TestCase):
     def test_const(self):
         env = calc_state.Env(expr.Const, expr.Const(0))
         seven = expr.Const(7)
-        self.assertEqual(repr(seven), 'Const(7)')
-        self.assertEqual(str(seven), '7')
+        self.assertEqual('Const(7)', repr(seven))
+        self.assertEqual('7', str(seven))
         self.assertEqual(seven.eval(env), expr.Const(7))
 
     def test_plus(self):
@@ -28,9 +28,8 @@ class TestExpr(unittest.TestCase):
         self.assertEqual(expr.Plus(eight, nine).eval(env), expr.Const(17))
         self.assertEqual(expr.Plus(eight, expr.Plus(nine, eight)).eval(env),
                          expr.Const(25))
-        self.assertEqual(repr(expr.Plus(eight, nine)),
-                         "Plus(Const(8),Const(9))")
-        self.assertEqual(str(expr.Plus(eight, nine)), "(8 + 9)")
+        self.assertEqual("Plus(Const(8), Const(9))", repr(expr.Plus(eight, nine)))
+        self.assertEqual("(8 + 9)", str(expr.Plus(eight, nine)))
 
     def test_minus(self):
         env = calc_state.Env(expr.Const, expr.Const(0))
@@ -42,9 +41,8 @@ class TestExpr(unittest.TestCase):
         self.assertEqual(expr.Minus(nine, eight).eval(env), expr.Const(1))
         self.assertEqual(expr.Minus(eight, expr.Minus(nine, eight)).eval(env),
                          expr.Const(7))
-        self.assertEqual(repr(expr.Minus(eight, nine)),
-                         "Minus(Const(8),Const(9))")
-        self.assertEqual(str(expr.Minus(eight, nine)), "(8 - 9)")
+        self.assertEqual("Minus(Const(8), Const(9))", repr(expr.Minus(eight, nine)))
+        self.assertEqual("(8 - 9)", str(expr.Minus(eight, nine)))
 
     def test_times(self):
         env = calc_state.Env(expr.Const, expr.Const(0))
@@ -85,6 +83,7 @@ class TestExpr(unittest.TestCase):
         # We can use x and y in an expression
         result = expr.Plus(expr.Times(x, expr.Const(3)), y).eval(env)
         self.assertEqual(result, expr.Const(15))
+
 
 if __name__ == '__main__':
     unittest.main()
