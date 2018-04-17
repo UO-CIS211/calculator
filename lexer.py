@@ -6,7 +6,7 @@ and alternatives for future development.
 
 Author: Michal Young (michal@cs.uoregon.edu), January 2018
 """
-import typing
+
 from typing import List, Type
 import re
 import syntax
@@ -21,9 +21,6 @@ log.setLevel(logging.INFO)
 # based on file syntax.py
 OPSYMS = syntax.OPS.keys()
 
-class LexicalError(Exception):
-    """Raised when we can't extract tokens from the input"""
-    pass
 
 class Token(object):
     """One token from the input stream"""
@@ -36,12 +33,40 @@ class Token(object):
     def __repr__(self) -> str:
         return "Token({}, {}, {})".format(repr(self.value), self.kind,
                                                 self.clazz.__name__)
+
     def __str__(self) -> str:
         return repr(self)
 
 END = Token(0, "END OF INPUT", expr.Const)
 
-    
+def lex(s: str) -> List[Token]:
+    """Break string into a list of Token objects"""
+    words = s.split()
+    tokens = [ ]
+    for word in words:
+        tokens.append(classify(word))
+    return tokens
+
+def classify(word: str) -> Token:
+    """Convert a textual token into a Token object
+    with a value and category.
+    """
+    if word in OPSYMS:
+        category, clazz = syntax.OPS[word]
+        return Token(word, category, clazz)
+    elif word.isidentifier():
+        return Token(word, syntax.IDENT, expr.Var)
+    elif word.isdigit():
+        return Token(int(word), syntax.CONST, expr.Const)
+    elif re.match("[0-9]*.[0-9]+", word):
+        return Token(float(word), syntax.CONST, expr.Const)
+    else:
+        raise LexicalError("Unrecognized token '{}'".format(word))
+
+class LexicalError(Exception):
+    """Raised when we can't extract tokens from the input"""
+    pass
+
 class Token_Stream(object):
     """
     Provides the tokens within a string one-by-one.
@@ -75,29 +100,6 @@ class Token_Stream(object):
         return token
 
 
-def lex(s: str) -> List[Token]:
-    """Break string into a list of Token objects"""
-    words = s.split()
-    tokens = [ ]
-    for word in words:
-        tokens.append(classify(word))
-    return tokens
-
-def classify(word: str) -> Token:
-    """Convert a textual token into a Token object
-    with a value and category.
-    """
-    if word in OPSYMS:
-        category, clazz = syntax.OPS[word]
-        return Token(word, category, clazz)
-    elif word.isidentifier():
-        return Token(word, syntax.IDENT, expr.Var)
-    elif word.isdigit():
-        return Token(int(word), syntax.CONST, expr.Const)
-    elif re.match("[0-9]*.[0-9]+", word):
-        return Token(float(word), syntax.CONST, expr.Const)
-    else:
-        raise LexicalError("Unrecognized token '{}'".format(word))
 
 """
 Developer notes: 
