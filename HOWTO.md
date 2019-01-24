@@ -1057,7 +1057,7 @@ class Assign(Expr):
 The ```eval``` method of ```Assign``` evaluates its right side but not its left side:
 
 ```python
-    def __eval__(self) -> IntConst: 
+    def eval(self) -> IntConst: 
         r_val = self.right.eval()
         self.left.assign(r_val)
         return r_val
