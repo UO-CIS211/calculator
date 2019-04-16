@@ -63,27 +63,50 @@ Guidance for building the calculator that
 
 ### Overview: The expression structure
 
-The heart of the calculator is the ```Expr``` class in ```expr.py```.   We can think of the expression structure as a tree.  Nodes in the tree may be constants (like 7), variables (like *x*), or binary operations like addition, subtraction, multiplication, and division.  Constants and variables are *leaves* of the expression tree.  Binary operations are *interior nodes* with two children, their left and right operands.  
+The heart of the calculator is the ```Expr``` class in ```expr.py```.
+We can think of the expression structure as a tree.  Nodes in the tree
+may be constants (like 7), variables (like *x*), or binary operations
+like addition, subtraction, multiplication, and division.  Constants
+and variables are *leaves* of the expression tree.  Binary operations
+are *interior nodes* with two children, their left and right operands. 
 
 ![Expression tree](doc/img/expr-eval-0.png)
 
-Computer scientists and software developers customarily draw the *root* of a tree at the top and the *leaves* at the bottom.  We are apparently not very good at botany.  
+Computer scientists and software developers customarily draw the
+*root* of a tree at the top and the *leaves* at the bottom.  We are
+apparently not very good at botany.   
 
 
  Each node in the tree is represented by an object that has an *eval* method.  
-We begin at the root of the tree. Before we can evaluate that node, we must evaluate its left and right operands, and before we can evaluate its left operand, we must evaluate *its* left operand ... thus we work our way recursively down to the Var node at the leftmost leaf: 
+We begin at the root of the tree. Before we can evaluate that node, we
+must evaluate its left and right operands, and before we can evaluate
+its left operand, we must evaluate *its* left operand ... thus we work
+our way recursively down to the Var node at the leftmost leaf:  
 
 ![Expression tree](doc/img/expr-eval-1.png)
 
-We have bound variable *x* to the constant value 7 with the assignment ```7 x =```, so the eval(env) method applied to Var("x") returns the value IntConst(7): 
+We have bound variable *x* to the constant value 7 with the assignment
+```7 x =```, so the eval(env) method applied to Var("x") returns the
+value IntConst(7):  
 
 ![Expression tree](doc/img/expr-eval-2.png)
 
-The Const(3).eval(env) returns Const(3), so now the Plus node can be evaluated.  Seeing that both of its operands have evaluated to constants, it can add them and produce Const(10). 
+The IntConst(3).eval(env) returns IntConst(3), so now the Plus node can be
+evaluated.  Seeing that both of its operands have evaluated to
+constants, it can add them and produce IntConst(10).  
 
 ![Expression tree](doc/img/expr-eval-3.png)
 
-The Plus node at the root still needs to evaluate its right operand.   *y* is unbound (we have not given it a value).  Our ```Env``` object provides a default value for uninitialized variables, so ```Var("y").eval(env)``` returns ```Const(0)```.
+The Plus node at the root still needs to evaluate its right operand.
+If *y* is unbound (we have not given it a value), we will raise 
+an exception.  If we have given it a value, that value
+will be "bound" to the variable name in the "environment". 
+In concrete terms, the environment is a dict with variable 
+names as keys and IntConst objects as values.  Assume for 
+this example that the (key, value) pair ("y", IntConst(0)) 
+is in the environment.  We say that variable y is "bound"
+to 0.  Evaluating the expression Var("y") the produces 
+IntConst(0). 
 
 ![Expression tree](doc/img/expr-eval-6.png)
 

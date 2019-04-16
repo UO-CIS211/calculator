@@ -42,11 +42,11 @@ it is currently holding.  (More on this below.)
     * Unary operations like absolute value.  These are operations 
     that have only a single operand.  For example, we 
     might represent abs(3) (conventionally written 
-    |3| in algebraic notation) as ```Abs(IntConst(3))```. 
-    Similarly to 
+    |3| in algebraic notation) as 
+    ```Abs(IntConst(3))``` . 
     
     * Assignment.  When we add variables, we'll 
-    want to add an additional operation for assigning a 
+    want to add an operation for assigning a 
     value to a variable, e.g., x = 3 
     would be ```Assign(Var('x'), IntConst(3))``` 
     
@@ -682,7 +682,7 @@ Adding a new binary operator in ```expr.py``` has become very simple.
 ## Unary operations
 
 Negation, which changes 42 to -42 and vice versa, is a unary operator. 
-We might represent it in the RPN calculator langauge as ```~``` to 
+We might represent it in the RPN calculator language as ```~``` to 
 avoid ambiguity.  
 Absolute value is also a unary operation.  We customarily write the 
 absolute value of *x* as ```|x|```, but for our RPN calculator it will 
