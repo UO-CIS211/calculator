@@ -86,12 +86,12 @@ our way recursively down to the Var node at the leftmost leaf:
 ![Expression tree](doc/img/expr-eval-1.png)
 
 We have bound variable *x* to the constant value 7 with the assignment
-```7 x =```, so the eval(env) method applied to Var("x") returns the
+```7 x =```, so the eval() method applied to Var("x") returns the
 value IntConst(7):  
 
 ![Expression tree](doc/img/expr-eval-2.png)
 
-The IntConst(3).eval(env) returns IntConst(3), so now the Plus node can be
+The IntConst(3).eval() returns IntConst(3), so now the Plus node can be
 evaluated.  Seeing that both of its operands have evaluated to
 constants, it can add them and produce IntConst(10).  
 

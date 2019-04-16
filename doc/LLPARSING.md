@@ -95,9 +95,11 @@ etc. were written to follow the grammar.  (In fact I first designed the
 grammar, then cranked out the corresponding code while reading the grammar.)
 This grammar uses a few shorthand features that make it more compact. 
 The symbol "|" means "or", so 
+
 ```
 #  primary ::= IDENT | CONST | '(' exp ')'
 ```
+
 means that a *primary* can be an identifier, an integer constant, or 
 a parenthesized expression (and the function ```_primary``` will have 
 to predict which of those alternatives to match by looking at a 
@@ -106,6 +108,7 @@ an item that may be repeated zero or more times.
 
 Notice that the precedence of arithmetic operations is captured by a hierarchy
 of grammar symbols: 
+
 ```
 #  exp ::= term { ('+'|'-') term }
 #  term ::= primary { ('*'|'/')  primary }

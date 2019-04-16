@@ -328,7 +328,7 @@ I'll leave that to you to write.
 
 One of the ways we can visualize an expression is as a tree.  In software development and computer science we draw trees upside down, with the "root" or "root node" at the top and "leaves" or "leaf nodes" at the bottom.  
 
-![Expressions are Trees](doc/img/Expr-Tree.png)
+![Expressions are Trees](img/Expr-Tree.png)
 
 Viewed this way, the base case of the recursion is in the methods in the leaf nodes, and all other nodes perform the recursive case.  You can view the recursive computation as "walking" the tree, systematically working its way down to the leaves and returning values upwards. 
 
@@ -447,34 +447,34 @@ called ```pop```.)
 Let's consider what the sequence should be for ````6 5 + 4 +```. 
 Initially the stack is empty. 
 
-![Initial parse state](doc/img/RPN-calc-1.png)
+![Initial parse state](img/RPN-calc-1.png)
 
 We process the first token (6) and push a corresponding ```IntConst```
 object
 
-![After pushing an IntConst](doc/img/RPN-calc-2.png)
+![After pushing an IntConst](img/RPN-calc-2.png)
 
 We likewise push the next value.
 
-![After pushing 6 and 5](doc/img/RPN-calc-3.png)
+![After pushing 6 and 5](img/RPN-calc-3.png)
 
 The next token is '+'.  We want to create a ```Plus``` node for it.  Where 
 are the left and right operands?  On the stack.  We pop them, build the ```Plus```
 object, and push it onto the stack. 
 
-![Plus](doc/img/RPN-calc-4.png)
+![Plus](img/RPN-calc-4.png)
 
 Next we have an another integer, 4.  We push it onto the stack just as 
 we did with the others. 
 
-![Another integer](doc/img/RPN-calc-5.png)
+![Another integer](img/RPN-calc-5.png)
 
 Finally we have another '+'.  We treat it exactly like the 
 first: Pop the two operands, build the ```Plus``` object, 
 and push it.  The only difference is that this time the 
 left operand will be another ```Plus``` node. 
 
-![Second Plus](doc/img/RPN-calc-6.png)
+![Second Plus](img/RPN-calc-6.png)
 
 At the conclusion of this, if the input was 
 syntactically correct, the top element of the stack 
@@ -535,7 +535,7 @@ Repeating code that is almost the same is not good.  It gives us too
 many chances to make errors, particularly sometime in the future when we 
 change some of that code but fail to change it everywhere consistently.  
 
-![Unhappy programmer](doc/img/unhappy.png)
+![Unhappy programmer](img/unhappy.png)
 
 
 ## DRY it out! 
@@ -677,7 +677,7 @@ This is a good time to write a ```Div``` class and a ```Minus``` class.
 operations like ```Remainder```, implemented by ```%``` in Python. 
 Adding a new binary operator in ```expr.py``` has become very simple. 
 
-![It's DRY now](doc/img/happy.png)
+![It's DRY now](img/happy.png)
 
 ## Unary operations
 
