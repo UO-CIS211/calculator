@@ -47,7 +47,7 @@ functions you have written before.
 ## Instructions
 
 Guidance for building the calculator that 
- interprets reverse Polish notation is in ```HOWTO.md```.  
+ interprets reverse Polish notation is in ```doc/HOWTO.md```.  
  
  A separate document, ```doc/LLPARSING.md```, describes how 
  ```llcalc.py``` interprets algebraic notation like 
