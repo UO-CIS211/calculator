@@ -64,6 +64,7 @@ class TokenCat(Enum):
     NEG = r"~"
     ABS = r"@"
     ASSIGN = r"="
+    IF = r"if"
     VAR = r"[a-zA-Z_][a-zA-Z_]*"
     LPAREN = r"\("
     RPAREN = r"\)"

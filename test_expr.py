@@ -6,6 +6,7 @@ Michal Young, 2020.01.17
 
 import unittest
 from expr import *
+from rpncalc import *
 
 class TestIntConst(unittest.TestCase):
 
@@ -52,7 +53,7 @@ class TestPlus(unittest.TestCase):
 ###  Tests of UnOp alone
 ###
 
-    class TestUnOp(unittest.TestCase):
+class TestUnOp(unittest.TestCase):
 
         def test_repr_simple(self):
             exp = Abs(IntConst(5))

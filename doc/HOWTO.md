@@ -74,9 +74,13 @@ should return "(5+3)*4" and
 repr(Times(Plus(IntConst(5), IntConst(3)), IntConst(4)))
 ```
 should return "Times(Plus(IntConst(5), IntConst(3)), IntConst(4))". 
-(Getting minimal parentheses in the ```__str__``` method 
+
+Getting minimal parentheses in the ```__str__``` method 
 is a bit complicated, so our ```__str__``` method will 
-over-parenthesize.) 
+over-parenthesize expressions with binary operations.  
+Unary operations do not present the same issues of 
+ambiguity, so we will not need additional parentheses for 
+negation and absolute value. 
 
 
 ### Class Expr
@@ -817,7 +821,7 @@ in the calculator:
 
 ```
 Expression (return to quit):3 5 - @
-(@(3 - 5)) => 2
+(@ (3 - 5)) => 2
 Expression (return to quit):3 5 -
 (3 - 5) => -2
 Expression (return to quit):
@@ -937,7 +941,7 @@ interactively:
 ``` 
 $ python3 rpncalc.py 
 Expression (return to quit):3 7 - 14 * 2 / ~
-(~ (((3 - 7) * 14) / 2)) => 28
+~ (((3 - 7) * 14) / 2) => 28
 Expression (return to quit):
 ```
 
