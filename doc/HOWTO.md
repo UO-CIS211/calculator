@@ -290,7 +290,7 @@ and right operands:
 ```python
     def __str__(self) -> str:
         """Implementations of __str__ should return the expression in algebraic notation"""
-        return f"({str(self.left)} + {str(self.right)})"
+        return f"({self.left} + {self.right})"
 ```
 
 How can this recursion work?  
@@ -821,7 +821,7 @@ in the calculator:
 
 ```
 Expression (return to quit):3 5 - @
-(@ (3 - 5)) => 2
+@ (3 - 5) => 2
 Expression (return to quit):3 5 -
 (3 - 5) => -2
 Expression (return to quit):
