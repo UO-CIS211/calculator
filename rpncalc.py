@@ -9,59 +9,27 @@ import lex
 import expr
 import sys
 import io
-from typing import List
 
-BINOPS = { lex.TokenCat.PLUS : expr.Plus,
-           lex.TokenCat.TIMES: expr.Times,
-           lex.TokenCat.DIV: expr.Div,
-           lex.TokenCat.MINUS:  expr.Minus
-        }
-
-UNOPS = { lex.TokenCat.NEG : expr.Neg,
-          lex.TokenCat.ABS : expr.Abs
-          }
-
-def rpn_parse(text: str) -> List[expr.Expr]:
-    """Parse text in reverse Polish notation
-    into a list of expressions (exactly one if
-    the expression is balanced).
-    Example:
-        rpn_parse("5 3 + 4 * 7")
-          => [ Times(Plus(IntConst(5), IntConst(3)), IntConst(4)))),
-               IntConst(7) ]
-    May raise:  IndexError (imbalanced expression), lex.LexicalError.
-    """
-    tokens = lex.TokenStream(io.StringIO(text))
-    stack = []
-    while tokens.has_more():
-        tok = tokens.take()
-        if tok.kind == lex.TokenCat.INT:
-            stack.append(expr.IntConst(int(tok.value)))
-        elif tok.kind in BINOPS:
-            right = stack.pop()
-            left = stack.pop()
-            stack.append(BINOPS[tok.kind](left, right))
-        elif tok.kind in UNOPS:
-            left = stack.pop()
-            stack.append(UNOPS[tok.kind](left))
-        elif tok.kind == lex.TokenCat.VAR:
-            stack.append(expr.Var(tok.value))
-        elif tok.kind == lex.TokenCat.ASSIGN:
-            right = stack.pop()
-            left = stack.pop()
-            stack.append(expr.Assign(right, left))
-    return stack
 
 def calc(text: str):
     """Read and evaluate a single line formula."""
     try:
-        stack = rpn_parse(text)
+        tokens = lex.TokenStream(io.StringIO(text))
+        stack = [ ]
+        while tokens.has_more():
+            tok = tokens.take()
+            if tok.kind == lex.TokenCat.INT:
+                stack.append(expr.IntConst(int(tok.value)))
+            elif tok.kind == lex.TokenCat.PLUS:
+                right = stack.pop()
+                left = stack.pop()
+                stack.append(expr.Plus(left, right))
     except lex.LexicalError as e:
         print(f"*** Lexical error {e}")
         return
     except IndexError:
         # Stack underflow means the expression was imbalanced
-        print(f"*** Imbalanced RPN expression, missing operand")
+        print(f"*** Imbalanced RPN expression, missing operand at {tok.value}")
         return
     if len(stack) == 0:
         print("(No expression)")
