@@ -835,7 +835,7 @@ write a similar set for every each concrete subclass of ```Expr```.
 However, now that I've made it very easy to add new 
 binary and unary operators, I would like to make it easier to write new test cases.  
 
-At present the `calc` function in `rpncacl.py` 
+At present the `calc` function in `rpncalc.py` 
 parses a line and then executes it, printing a result. 
 I can't easily use the `calc` function in a test 
 case, because it prints its result instead of returning 
@@ -853,7 +853,8 @@ def calc(text: str):
         return
     except IndexError:
         # Stack underflow means the expression was imbalanced
-        print(f"*** Imbalanced RPN expression, missing operand at {tok.value}")
+        print(f"*** Imbalanced RPN expression, missing operand")
+        # Note: We no longer have access to "tok"!
         return
     if len(stack) == 0:
         print("(No expression)")
