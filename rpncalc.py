@@ -7,7 +7,6 @@ notation and then prints the result of evaluating it.
 
 import lex
 import expr
-import sys
 import io
 
 
@@ -25,18 +24,18 @@ def calc(text: str):
                 left = stack.pop()
                 stack.append(expr.Plus(left, right))
     except lex.LexicalError as e:
-        print(f"*** Lexical error {e}")
+        raise ValueError(f"Lexical error {e}")
         return
     except IndexError:
         # Stack underflow means the expression was imbalanced
-        print(f"*** Imbalanced RPN expression, missing operand at {tok.value}")
+        raise ValueError(f"Imbalanced RPN expression, missing operand at {tok.value}")
         return
     if len(stack) == 0:
         print("(No expression)")
     else:
         # For a balanced expression there will be one Expr object
-        # on the stack, but if there are more we'll just print
-        # each of them
+        # on the stack, but if there are more we'll just evaluate
+        # and print each of them
         for exp in stack:
             print(f"{exp} => {exp.eval()}")
 
