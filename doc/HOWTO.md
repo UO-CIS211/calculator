@@ -7,18 +7,24 @@ core functionality.  You will build the shared core functionality
 arithmetic expressions) and one of the two calculators that use it. 
 
 One of the two calculators will take a conventional algebraic notation, 
-e.g., ```( 5 + 3 ) * 4``` should produce 32. I will provide 
- that one.  The other calculator will take 
-reverse Polish notation (RPN), in which we would write the same 
-expression as ```5 3 + 4 *```.   Both of these calculators will
-work by first translating the input into an expression tree, 
-and then evaluating the expression tree.  The expression tree
-is what you will build. 
+e.g., ```( 5 + 3 ) * 4``` should produce `32`. I will provide the 
+_parser_ that converts an expression like ```(5+3)*4``` into a _tree_,
+and you will provide the methods for calculating the result `32` 
+from the tree. The other calculator will take 
+reverse Polish notation (RPN), also called _postfix_, in which we 
+would write the same 
+expression as ```5 3 + 4 *```.   You will provide the code for 
+translating this postfix expression into the same tree form. 
 
-## expr.py
+There will be two main parts.  `expr.py` will define the classes for 
+nodes of expression trees.  The classes defined in `expr.py` will be 
+used by both versions of the calculator.  `rpncalc.py` will be the 
+calculator for reverse Polish notation. 
 
-We want to represent expressions as objects.  Some of the kinds of
-expressions we want to represent include: 
+## Expressions
+
+We want to represent expressions as objects. Expressions we want to 
+represent include: 
 
 * Integer constants, like 5.  The value of an integer constant
 is itself.   This will be class IntConst, and we'll create it 
@@ -64,7 +70,8 @@ should return `IntConst(32)`.
 
 In addition to `eval`, we would like each kind of expression to 
 have a ```__str__``` method to return its customary string 
-representation and ```__repr__``` to return a string that looks 
+representation in algebraic notation
+and ```__repr__``` to return a string that looks 
 like a call to construct the expression.  For example, 
 ```python
 str(Times(Plus(IntConst(5), IntConst(3)), IntConst(4)))
@@ -82,6 +89,11 @@ Unary operations do not present the same issues of
 ambiguity, so we will not need additional parentheses for 
 negation and absolute value. 
 
+## expr.py
+
+Create file `expr.py`, the source code file that will hold all the 
+classes for representing expression trees. Give it a header 
+docstring in the usual way. 
 
 ### Class Expr
 
@@ -96,24 +108,66 @@ class Expr(object):
 
     def eval(self) -> "IntConst":
         """Implementations of eval should return an integer constant."""
-        raise NotImplementedError("Each concrete Expr class must define 'eval'")
+        raise NotImplementedError(
+            f"'eval' not implemented in {self.__class__.__name__}\n"
+            "Each concrete Expr class must define 'eval'")
 
     def __str__(self) -> str:
         """Implementations of __str__ should return the expression in algebraic notation"""
-        raise NotImplementedError("Each concrete Expr class must define __str__")
+        raise NotImplementedError(
+            f"'__str__' not implemented in {self.__class__.__name__}\n"
+            "Each concrete Expr class must define '__str__'")
 
     def __repr__(self) -> str:
         """Implementations of __repr__ should return a string that looks like
         the constructor, e.g., Plus(IntConst(5), IntConst(4))
         """
-        raise NotImplementedError("Each concrete Expr class must define __repr__")
+        raise NotImplementedError(
+            f"'__repr__' not implemented in {self.__class__.__name__}\n"
+            "Each concrete Expr class must define '__repr__'")
 ```
 
+There are a couple of new things to note in the error messages these 
+abstract methods produce.   
+First is the way they access name of the class of an object `t` as
+`t.__class__.__name__`.  `t.__class__` obtains the class of object 
+`t`, and `__name__` gets the name of that class as a string.  Second 
+is that the error message is broken across two lines just by giving a
+sequence of string literals.  In Python,
+`"First part,"   " second part"` concatenates the two string literals to
+give us `"First part, second part"`. 
+
+### Checkpoint 1
+
+At this point you have `expr.py` with one abstract class, `Expr`.
+You can test this by starting a Python console in the terminal.
+Import the `Expr` class from `expr.py`, create an `Expr` object
+and attempt to print it. 
+
+```commandline
+$ python3
+Python 3.10.2 (v3.10.2:a58ebcc701, Jan 13 2022, 14:50:16) [Clang 13.0.0 (clang-1300.0.29.30)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from expr import Expr
+>>> e = Expr()
+>>> print(e)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/Users/michal/Dropbox/23W-211/projects/dist/calculator/expr.py", line 14, in __str__
+    raise NotImplementedError(
+NotImplementedError: '__str__' not implemented in Expr
+Each concrete Expr class must define '__str__'
+```
+
+(While this should work in any Python 3 console, as of January 2023
+PyCharm has a bug that prevents display of the "NotImplementedError" 
+message in the PyCharm console.)
 
 ### IntConst
 
-The first concrete subclass we will build is ```IntConst```, because it is the return type of 
-```eval``` and we really can't test anything else without it.   We'll start by creating a 
+The first concrete subclass we will build is ```IntConst```,
+because it is the return type of ```eval``` and we really can't test 
+anything else without it.   We'll start by creating a 
 file ```test_expr.py``` and writing a couple of test cases for it. 
 
 Here's a start: 
@@ -150,7 +204,7 @@ an `int` value. It should have the same string representation
 as the `int` value it wraps.  It's `repr` should look 
   like a call to the `IntConst` constructor. 
   An `IntConst` evaluates to 
-itself, i.e., the `__eval__` method can just `return self`. 
+itself, i.e., the `eval` method can just `return self`. 
 
 When you have written the `IntConst` class, 
 run the tests again.  
@@ -181,17 +235,25 @@ implementation might be:
         return self.value == other.value
 ```
 
-However, this isn't right!  Consider: 
+However, this isn't right, because we need to be
+able to compare any `Expr` object to any other. 
+Consider: 
 
 ```python
 IntConst(7) == Plus(IntConst(3), IntConst(4))
 ```
 
+This should return `False` (it is not the same tree, even if it
+would evaluate to the same value), but it would instead raise an 
+exception because a `Plus` object does not have a `value` field 
+(instance variable). 
+
 What should we do?  Python provides the ```isinstance``` 
 function to check whether an object belongs to 
 some class. We'll make use of it so that we 
 only access the instance variables of `other` if 
-it is in fact an `IntConst`: 
+it is in fact an `IntConst`.  Objects of different types will never
+be considered equal: 
 
 ```python
     def __eq__(self, other: Expr):
@@ -207,6 +269,12 @@ Ran 3 tests in 0.000s
 
 OK
 ```
+
+### Checkpoint
+
+At this point your `expr.py` file contains the abstract class `Expr` 
+and the concrete subclass `IntConst`.  Your `test_expr.py` contains 
+test cases for `IntConst`. 
 
 ### Plus
 
@@ -238,10 +306,10 @@ around the whole thing?  Maybe for ```Plus``` we could just omit all
 the parentheses, but we couldn't do that for ```Minus```, because 
 ```(3 - 4) - 2``` is not the same as ```3 - (4 - 2)```. 
  
-We could go to a lot of extra work to decide just where the parentheses are 
-really required, but that seems like too much work for a simple 
-calculator.  Will our user really mind so much if we just 
-put parentheses wherever they *might* be needed?  So we'll 
+We could go to a lot of extra work to decide just where the
+parentheses are really required, but that seems like too much
+work for a simple calculator.  Will our user really mind so much if we
+just put parentheses wherever they _might_ be needed?  We'll 
 err on the side of over-parenthesization, and rewrite our 
 test cases as follows: 
 
@@ -257,7 +325,8 @@ class TestPlus(unittest.TestCase):
         self.assertEqual(str(exp), "((4 + 5) + 3)")
 ```
 
-We'll also add some test cases for ```__repr__``` and ```__eq__``` and ```eval```. 
+We'll also add some test cases for ```__repr__``` and ```__eq__```
+and ```eval```, all within class `TestPlus`. 
 
 ```python
     def test_repr_simple(self):
@@ -289,13 +358,14 @@ and right operands:
 
 ```python
     def __str__(self) -> str:
-        """Implementations of __str__ should return the expression in algebraic notation"""
+        """Algebraic notation, fully parenthesized: (left + right)"""
         return f"({self.left} + {self.right})"
 ```
 
 How can this recursion work?  
 If you haven't already, now would be a good time to 
-read the [supplement chapter](https://uo-cis211.github.io/chapters/03_1_Recursion)
+read the [chapter](
+https://uo-cs-oer.github.io/CS211-text/03_Recursion/03_1_Recursion.html)
 on recursion in object-oriented programs.  As in ordinary 
 functions, we must determine whether to apply the 
 base case or the recursive case. But unlike in ordinary 
@@ -304,8 +374,10 @@ all together in a single function body, with an `if` statement
 to select the appropriate code.  Instead, the base cases
 and recursive cases are in different subclasses.  
  If we call 
-```str``` on an ```IntConst``` object, we get the base case.  If we call 
-```str``` on a ```Plus``` object, we get the recursive case.  
+```str``` on an ```IntConst``` object,
+we get the base case.  If we call 
+```str``` on a ```Plus``` object, 
+we get the recursive case.  
 
 The 
 recursive case is still calling a "smaller" part of the original value. 
@@ -318,7 +390,7 @@ we can (and often do) say that the expression structure is a
 The ```__repr__``` method works much like the ```__str__``` method; 
 I'll leave that to you to write. 
 
-### Expressions are Trees
+### Expressions are trees
 
 One of the ways we can visualize an expression is as a tree.  
 In software development and computer science we 
@@ -330,7 +402,11 @@ and leaves on the right.)
 
 ![Expressions are Trees](img/Expr-Tree.png)
 
-Viewed this way, the base case of the recursion is in the methods in the leaf nodes, and all other nodes perform the recursive case.  You can view the recursive computation as "walking" the tree, systematically working its way down to the leaves and returning values upwards. 
+Viewed this way, the base case of the recursion is in the
+methods in the leaf nodes, and all other nodes perform the recursive
+case.  You can view the recursive computation as "walking" the tree,
+systematically working its way down to the leaves and returning
+values upwards. 
 
 ### ```eval``` is recursive
 
@@ -351,11 +427,27 @@ we should be able to pass the test cases we wrote for
 evaluation of expressions constructed from ```Plus```
 and ```IntConst```. 
 
+### Checkpoint
+
+At this point you have the base class `Expr` and two concrete 
+subclasses, `IntConst` and `Plus`.  This is enough to represent
+expressions that involve only addition, like 
+`Plus(Plus(IntConst(5), IntConst(3)), IntConst(4))`.  In addition to 
+passing the test cases in `test_expr.py`, you can check the 
+functionality in the Python console: 
+
+```pycon
+>>> from expr import *
+
+>>> Plus(Plus(IntConst(5), IntConst(3)), IntConst(4)).eval()
+IntConst(12)
+```
+
 ## Parsing input (first cut)
 
 We could go on building up the ```expr.py``` module and 
 test cases, but it would be more satisfying and reassuring
-to see even just a little bit of real calculator behavior. 
+to see even a little bit of real calculator behavior. 
 So, let's take a little detour and build a module to 
 read input and build an ```Expr``` object (really a tree 
 of ```Expr``` objects).  
@@ -378,8 +470,7 @@ are just the parts that make up the expression.
 
  I have provided you a lexical analysis module, `lex.py`, to save
 time and help you focus on the main issues in this 
- project. 
- It provides a class TokenStream for obtaining each 
+ project. It provides a class TokenStream for obtaining each 
  lexeme (token), one by one.  Internally, `lex.py` uses 
  the *regular expression* package `re` to break the 
  input into tokens.  We will study regular expressions 
@@ -398,11 +489,11 @@ class TokenStream(object):
            # Do something with the token
     """
 ``` 
- 
- The ```TokenStream``` methods ```peek``` and ```take``` return ```Token``` 
- objects, which hold both the text of the token and a classification.   Then 
- ```Token``` class is very simple: 
- 
+
+The ```TokenStream``` methods ```peek``` and ```take``` return
+```Token``` objects, which hold both the text of the token and a 
+classification. The ```Token``` class is very simple:
+
 ```python
 class Token(object):
     """One token from the input stream"""
@@ -475,7 +566,7 @@ object, and push it onto the stack.
 that we will draw sideways so that we can 
 draw the stack vertically.) 
 
-Next we have an another integer, 4.  We push it onto the stack just as 
+Next we have +another integer, 4.  We push it onto the stack just as 
 we did with the others. 
 
 ![Another integer](img/RPN-calc-5.png)
@@ -535,17 +626,16 @@ class Times(Expr):
         the constructor, e.g., Plus(IntConst(5), IntConst(4))
         """
         return f"Times({repr(self.left)}, {repr(self.right)})"
-
 ```
 
 Should we happy about this?  It works.  It was fairly easy copying code 
-from the ```Plus``` class and making a few changes.  But we are not happy. 
-Repeating code that is almost the same is not good.  It gives us too 
-many chances to make errors, particularly sometime in the future when we 
-change some of that code but fail to change it everywhere consistently.  
+from the ```Plus``` class and making a few changes.  But we
+are not happy. Repeating code that is almost the same is not good.
+It gives us too many chances to make errors, particularly some time
+in the future when we change some of that code but fail to
+change it everywhere consistently.  
 
 ![Unhappy programmer](img/unhappy.png)
-
 
 ## DRY it out! 
 
@@ -572,12 +662,12 @@ class Times(BinOp):
 ```
 
 PyCharm may complain that our new ```BinOp``` class does not implement
-all the methods of ```Expr```.  That's ok, because ```BinOp``` itself is abstract. 
-That is, we're not going to create objects of class ```BinOp```; we'll only 
-create objects of classes ```Plus```, ```Times```, etc.  (There is a 
-way in Python to mark the class as abstract and suppress the warnings 
-from PyCharm and other tools, but it is unwieldy.  I don't want to
-deal with it here.)
+all the methods of ```Expr```.  That's ok, because ```BinOp``` itself
+is abstract. That is, we're not going to create objects of class
+```BinOp```; we'll only create objects of classes ```Plus```,
+```Times```, etc.  (There is a way in Python to mark the class as
+abstract and suppress the warnings from PyCharm and other tools,
+but it is unwieldy.  I don't want to deal with it here.)
 
 ```eval``` is going to be the most interesting method to factor out, 
 but let's start simpler with ```__str__```.  The only difference between
@@ -591,60 +681,89 @@ instance variables) and the `__str__` and `__repr__` methods
 differ only in the operation symbol ("+" or "*") and the 
 class name ("Plus" or "Times").  We could factor out all of this 
 common code into the `BinOp` class if we just put the operation 
-symbol and class name in variables.  Let's give the `BinOp`
-class a method to set all these instance variables: 
+symbol and class name in variables.  Let's factor all the initialization
+except for the choice of symbol into the constructor for `BinOp`:
+
 
 ```python
 class BinOp(Expr):
-    def __init__(self):
-        raise NotImplementedError("Do not instantiate BinOp")
-
-    def _binop_init(self, left: Expr, right: Expr, op_sym: str, op_name: str):
+    """Abstract base class for binary operations"""
+    def __init__(self, left: Expr, right: Expr, symbol: str="?Operation symbol undefined"):
         self.left = left
         self.right = right
-        self.op_sym = op_sym
-        self.op_name = op_name
+        self.symbol = symbol
 ```
-
-I have chosen a name starting with an underscore to emphasize that it
-is not a method that should be called from outside `expr.py`.  It 
-should instead be called by the constructors of the concrete 
-subclasses, like this: 
+Now the constructors of concrete subclasses can delegate to the
+the constructor of `BinOp`, providing the appropriate symbol: 
 
 ```python
 class Plus(BinOp):
     """Expr + Expr"""
     def __init__(self, left: Expr, right: Expr):
-        self._binop_init(left, right, "+", "Plus")
+        super().__init__(left, right, symbol="+")
 ```
 
-Now the `Plus` class does not need its own `__str__` or `__repr__`
-methods.  We can factor them out into a method in `BinOp` that 
-uses the new instance variables, like this: 
+We've saved a few lines of repetitive code.  A bigger gain 
+comes from factoring the `__str__` and `__repr__` methods into
+`BinOp` and removing them from `Plus`.  The `__str__` class
+in `BinOp` can be: 
 
 ```python
     def __str__(self) -> str:
         return f"({self.left} {self.op_sym} {self.right})"
 ```
 
-We will factor the `__repr__` methods similarly, and do the same 
-for all the binary operators. 
+Now the `__str__` method can be removed from the `Plus` class. 
 
-We have cut ```Plus``` and ```Times``` down to just a constructor and the ```eval``` method.  Can we factor out ```eval```?
-The only thing that differs in the ```eval``` methods of ```Plus``` and ```Times``` 
-is that the former adds the left and right values and the latter multiplies them. 
-It seems like we ought to be able to factor that out ... and indeed we can. 
-Instead of adding another field in the constructor, we can add an 
-internal method ```_apply``` to each of the ```BinOp``` classes.  For example, 
-in the ```Plus``` class we will have 
+Factoring the `__repr__` method is slightly more complex.  Recall 
+how we obtained the name of a class in abstract methods in class `Expr`
+as `self.__class__.__name__`.  We can use that to build a generic 
+`__repr__` method in class `BinOp`: 
+
+
+
+We will factor the `__repr__` methods similarly, and do the same 
+for all the binary operators.  
+
+### Checkpoint
+
+We have not added any new functionality in this step, but we have 
+simplified the code.  Now you have classes `Expr`, `BinOp`, `Plus`, 
+and `Times`.  The only methods in `Plus` and `Times` are the 
+constructor (`__init__`), which calls its superclass with
+one extra argument for the operation symbol, and `eval`.  It should 
+still pass the 9 test cases we have written in `test_expr.py`. 
+
+## Factoring evaluation
+
+We can refactor even more.  
+
+The only thing that differs in the ```eval``` methods of ```Plus```
+and ```Times``` is that the former adds the left and right values 
+and the latter multiplies them.  We can add an 
+internal method ```_apply``` to each of the ```BinOp``` classes. 
+
+We will need an abstract method `_apply` in the `BinOp` class: 
+
+```python
+    def _apply(self, left_val: int, right_val: int) -> int:
+        """Each concrete BinOp subclass provides the appropriate method"""
+        raise NotImplementedError(
+            f"'_apply' not implemented in {self.__class__.__name__}\n"
+            "Each concrete BinOp class must define '_apply'")
+```
+
+
+Then the  concrete subclasses like `Plus` can override it, for example
 
 ```python
     def _apply(self, left: int, right: int) -> int:
         return left + right
 ```
 
-This is a good deal simpler than ```eval```, which now moves into the 
-```BinOp``` class, like this: 
+This is a good deal simpler than `eval`, which we can now factor 
+into the `BinOp` class like this: 
+
 
 ```python
     def eval(self) -> "IntConst":
@@ -657,12 +776,42 @@ This is a good deal simpler than ```eval```, which now moves into the
 At this point our ```Plus``` and ```Times``` classes are short and clear.
 Mine are just 5 lines of code each, not counting comments and blank lines.  
 This is a good time to write a ```Div``` class and a ```Minus``` class. 
-```Div``` should implement integer truncating division, ```//``` rather than 
-```/``` in Python.  It would be straightforward to add additional binary 
-operations like ```Remainder```, implemented by ```%``` in Python. 
-Adding a new binary operator in ```expr.py``` has become very simple. 
+```Div``` should implement integer truncating division, ```//```
+rather than ```/``` in Python.  It would be straightforward to add 
+additional binary  operations like ```Remainder```, implemented by 
+```%``` in Python. Adding a new binary operator in ```expr.py```
+has become very simple.
 
 ![It's DRY now](img/happy.png)
+
+We can add the following test cases in `test_expr.py` to increase our 
+confidence that we have implemented all four operations correctly: 
+
+```python
+class TestBinOp(unittest.TestCase):
+    """Test the remainder of the binary operations"""
+
+    def test_div(self):
+        exp = Div(IntConst(7), IntConst(3))
+        self.assertEqual(exp.eval(), IntConst(2))
+
+    def test_sub(self):
+        exp = Minus(IntConst(7), IntConst(3))
+        self.assertEqual(exp.eval(), IntConst(4))
+
+    def test_composed(self):
+        """Putting them all together: (10 - (2 + 1)) * (4 / 2) = 14"""
+        exp = Times(
+            Minus(IntConst(10), Plus(IntConst(2), IntConst(1))),
+            Div(IntConst(4), IntConst(2)))
+        self.assertEqual(exp.eval(), IntConst(14))
+```
+
+### Checkpoint
+
+You should now have classes `Expr`, `Binop`, `Plus`, `Minus`, `Times`, 
+and `Div`.  Classes `Plus`, `Minus`, `Times`, and `Div` are very 
+similar and all very short.  They pass all 12 test cases. 
 
 ## Unary operations
 
@@ -682,32 +831,44 @@ We can write and try a few more test cases before we enhance the
 RPN calculator to enable interactive checking of `Neg` and `Abs`. 
 
 ```python
-    class TestUnOp(unittest.TestCase):
+class TestUnOp(unittest.TestCase):
 
-        def test_repr_simple(self):
-            exp = Abs(IntConst(5))
-            self.assertEqual(repr(exp), "Abs(IntConst(5))")
-            exp = Neg(IntConst(6))
-            self.assertEqual(repr(exp), "Neg(IntConst(6))")
+    def test_repr_simple(self):
+        exp = Abs(IntConst(5))
+        self.assertEqual(repr(exp), "Abs(IntConst(5))")
+        exp = Neg(IntConst(6))
+        self.assertEqual(repr(exp), "Neg(IntConst(6))")
 
-        def test_str_simple(self):
-            exp = Abs(IntConst(12))
-            self.assertEqual(str(exp), "@ 12")
-            exp = Neg(IntConst(13))
-            self.assertEqual(str(exp), "~ 13")
+    def test_str_simple(self):
+        exp = Abs(IntConst(12))
+        self.assertEqual(str(exp), "(@ 12)")
+        exp = Neg(IntConst(13))
+        self.assertEqual(str(exp), "(~ 13)")
 
-        def test_abs_eval(self):
-            exp = Minus(IntConst(3), IntConst(5))
-            self.assertEqual(exp.eval(), IntConst(-2))
-            exp = Abs(exp)
-            self.assertEqual(exp.eval(), IntConst(2))
+    def test_abs_eval(self):
+        exp = Minus(IntConst(3), IntConst(5))
+        self.assertEqual(exp.eval(), IntConst(-2))
+        exp = Abs(exp)
+        self.assertEqual(exp.eval(), IntConst(2))
 
-        def test_neg_eval(self):
-            exp = Minus(IntConst(12), IntConst(8))
-            self.assertEqual(exp.eval(), IntConst(4))
-            exp = Neg(exp)
-            self.assertEqual(exp.eval(), IntConst(-4))
+    def test_neg_eval(self):
+        exp = Minus(IntConst(12), IntConst(8))
+        self.assertEqual(exp.eval(), IntConst(4))
+        exp = Neg(exp)
+        self.assertEqual(exp.eval(), IntConst(-4))
+
+    def test_together(self):
+        """Compose unary and """
+        exp = Abs(Plus(IntConst(3), Neg(IntConst(12))))
+        self.assertEqual(str(exp), "(@ (3 + (~ 12)))")
+        self.assertEqual(exp.eval(), IntConst(9))
 ```
+
+### Checkpoint
+
+At this point, in addition to the `Expr` and all the `BinOp` classes,
+you have `UnOp` and its concrete subclasses `Neg`, and `Abs`.  
+There are now 17 test cases. 
 
 ## Enhancing the RPN Calculator
 
@@ -742,14 +903,13 @@ cases and never see it!  What can we do?
 
  
 So far we've used multiple tactics to factor repetitive code. 
-For `__str__` and `__repr__` in `BinOp` and `UnOp`, we were 
-able to factor out differences to variables.  For `eval` we 
-were able to factor out differences to the small method `_apply`. 
-In both cases we were able to factor the common code into a method 
+For `__str__`  in `BinOp` and `UnOp`, we were 
+able to factor out differences to a variable.  For `eval` we 
+were able to factor out differences to the small method `_apply`
 that could be inherited from an abstract base class, `BinOp` or `UnOp`. 
 Unfortunately we can't use quite the same tactic 
 for the repetitive code in the RPN calculator, because 
-it isn't replicated from 
+it isn't replicated 
 from class to class (although it refers to classes). 
  The code is 
 repeated within branches of a single function. We'll need another 
@@ -833,7 +993,8 @@ Bye! Thanks for the math!
 Initially I wrote a set of test cases for ```Plus```. I could 
 write a similar set for every each concrete subclass of ```Expr```. 
 However, now that I've made it very easy to add new 
-binary and unary operators, I would like to make it easier to write new test cases.  
+binary and unary operators, I would like to make it easier
+to write new test cases.  
 
 At present the `calc` function in `rpncalc.py` 
 parses a line and then executes it, printing a result. 
@@ -848,28 +1009,24 @@ def calc(text: str):
     """Read and evaluate a single line formula."""
     try:
         stack = rpn_parse(text)
-    except lex.LexicalError as e:
-        print(f"*** Lexical error {e}")
-        return
-    except IndexError:
-        # Stack underflow means the expression was imbalanced
-        print(f"*** Imbalanced RPN expression, missing operand")
-        # Note: We no longer have access to "tok"!
-        return
-    if len(stack) == 0:
-        print("(No expression)")
-    else:
-        # For a balanced expression there will be one Expr object
-        # on the stack, but if there are more we'll just print
-        # each of them
-        for exp in stack:
-            print(f"{exp} => {exp.eval()}")
+        if len(stack) == 0:
+            print("(No expression)")
+        else:
+            # For a balanced expression there will be one Expr object
+            # on the stack, but if there are more we'll just print
+            # each of them
+            for exp in stack:
+                print(f"{exp} => {exp.eval()}")
+    except Exception as e: 
+        print(e)
 ```
 
-It will call `rpn_parse`: 
+The `calc` function prints exceptions but does not re-raise them, 
+so that the main function can loop through correct and incorrect 
+inputs. `calc` will call `rpn_parse`: 
 
 ```python
-def rpn_parse(text: str) -> List[expr.Expr]:
+def rpn_parse(text: str) -> list[expr.Expr]:
     """Parse text in reverse Polish notation
     into a list of expressions (exactly one if
     the expression is balanced).
@@ -877,44 +1034,60 @@ def rpn_parse(text: str) -> List[expr.Expr]:
         rpn_parse("5 3 + 4 * 7")
           => [ Times(Plus(IntConst(5), IntConst(3)), IntConst(4)))),
                IntConst(7) ]
-    May raise:  IndexError (imbalanced expression), lex.LexicalError.
+    May raise:  ValueError for lexical or syntactic error in input 
     """
 ```
-I leave the body of rpn_parse to you.  To give the type 
-annotation above, we need to add
+
+I leave most of the body of `rpn_parse` to you.  Note that there are 
+two distinct exceptions that the RPN parser could encounter a 
+`LexicalError` exception from the lexer, or an `IndexError` if the 
+expression is unbalanced.  The `LexicalError` is descriptive enough, 
+so we can just pass it on: 
 
 ```python
-from typing import List
+    except lex.LexicalError as e:
+        # Lexer choked on input; re-raise the exception with its original message
+        raise
 ```
-at the top of the file.  While it might be nice to introduce a 
-new specific exception instead of using ```IndexError``` to 
-indicate an imbalanced expression, the point where we raise 
-this exception and the point where we handle it are close 
-enough together that I don't feel too bad about letting 
-```rpn_parse``` raise ```IndexError``` if the stack underflows. 
+
+`IndexError`, on the other hand, is not a good explanation of what 
+was wrong with an input expression.  We'll translate it to a 
+`ValueError` with a descriptive message: 
+
+```python
+    except IndexError:
+        # Stack underflow means the expression was imbalanced
+        raise ValueError(
+            f"Imbalanced RPN expression, missing operand at {tok.value}")
+```
+
 
 Whereas the ```calc``` function was not useful in our test 
-suite, the ```rpn_parse``` function is useful.  I can write: 
+suite, the ```rpn_parse``` function is useful.  I put the following
+in a separate test module, `test_rpncalc.py`: 
 
 ```python
-class TestBinop(unittest.TestCase):
+class TestParseRPN(unittest.TestCase):
 
-    def test_a_bunch(self):
+    def test_parse_add(self):
         exp = rpn_parse("5 4 +")[0]
         self.assertEqual(str(exp), "(5 + 4)")
         self.assertEqual(repr(exp), "Plus(IntConst(5), IntConst(4))")
         self.assertEqual(exp.eval(), IntConst(9))
-        #
+        
+    def test_parse_times(self):
         exp = rpn_parse("5 3 * ")[0]
         self.assertEqual(repr(exp), "Times(IntConst(5), IntConst(3))")
         self.assertEqual(str(exp), "(5 * 3)")
         self.assertEqual(exp.eval(), IntConst(15))
-        #
+        
+    def test_parse_minus(self):
         exp = rpn_parse("5 3 -")[0]
         self.assertEqual(str(exp), "(5 - 3)")
         self.assertEqual(repr(exp), "Minus(IntConst(5), IntConst(3))")
         self.assertEqual(exp.eval(), IntConst(2))
-        #
+        
+    def test_parse_div(self):
         exp = rpn_parse("7 3 /")[0]
         self.assertEqual(str(exp), "(7 / 3)")
         self.assertEqual(repr(exp), "Div(IntConst(7), IntConst(3))")
@@ -945,6 +1118,14 @@ Expression (return to quit):3 7 - 14 * 2 / ~
 ~ (((3 - 7) * 14) / 2) => 28
 Expression (return to quit):
 ```
+
+### Checkpoint
+
+In addition to all the `BinOp` and `UnOp` classes in `expr.py`,
+you now have `rpn_parse`, `calc`, and `rpn_calc` in `rpncalc.py`.
+A separate test file `test_rpncalc.py` has five test cases, in 
+addition to those in `test_expr.py`.
+
 
 ## Adding variables
 
@@ -986,10 +1167,12 @@ beginning of ```expr.py``` we can add:
 # One global environment (scope) for 
 # the calculator
 
-ENV = dict()
+ENV: dict[str, "IntConst"] = dict()
 ```
 
-I use all-caps for ```ENV``` as a reminder that it is a global variable. 
+I use all-caps for ```ENV``` as a reminder that it is a global variable.
+The type annotation must place `IntConst` in quotes because the 
+`IntConst` class is defined later in the file. 
 
 Calculators usually have an "all-clear" button to clear all memory.  We 
 might consider writing a corresponding function this way: 
@@ -1012,7 +1195,8 @@ def env_clear():
     ENV = dict()
 ```
 
-I have not added an "all clear" command to the calculator interface; you may want to try it after completing the project. 
+I have not added an "all clear" command to the calculator interface;
+you may want to try it after completing the project. 
 
 Now we can make an ```Expr``` subclass ```Var```.  Its 
 ```eval``` method will look in the environment for a value, 
@@ -1093,7 +1277,10 @@ class Assign(Expr):
         self.right = right
 ```
 
-The ```eval``` method of ```Assign``` evaluates its right side but not its left side:
+Note the `Assign` class is not the same as the `assign` method of 
+`Var`.   The `Assign` class will use `Var.assign` in its `eval` method. 
+The ```eval``` method of ```Assign``` evaluates its right side but
+not its left side:
 
 ```python
     def eval(self) -> IntConst: 
@@ -1105,7 +1292,7 @@ The ```eval``` method of ```Assign``` evaluates its right side but not its left 
 I leave the ```__str__``` and ```__repr__``` methods to you. 
 
 When we have a working `Var` class and `Assign` class, 
-the following test case should pass: 
+the following test case in `text_expr.py` should pass: 
 
 ```python
 class TestVars(unittest.TestCase):
@@ -1118,14 +1305,23 @@ class TestVars(unittest.TestCase):
         exp = Assign(w, v)
         self.assertEqual(exp.eval(), IntConst(5))
         self.assertEqual(w.eval(), IntConst(5))
+
+    def test_assign_reps(self):
+        v = Var("v")
+        w = Var("w")
+        exp = Assign(v, Plus(IntConst(5), w))
+        self.assertEqual(str(exp), "(v = (5 + w))")
+        self.assertEqual(repr(exp), "Assign(Var(v), Plus(IntConst(5), Var(w)))")
 ```
 
-To parse this, I need to add cases in ```rpn_calc``` for 
+At this point our `text_expr.py` contains 19 test case methods. 
+
+To parse assignments, I need to add cases in ```rpn_calc``` for 
 variables and assignments.  Variables are straightforward, 
 and I leave them to you. 
 
 For assignments, I want to do something slightly different. 
-In programming languages we typically put the the variable 
+In programming languages we typically put the variable 
 on the left side of the assignment statement, like 
 ```x = 3 + 4```, and I've used that convention in making 
 the variable be the ```left``` field of an ```Assign``` object. 
@@ -1167,14 +1363,14 @@ Expression (return to quit):
 ```
 
 We should also add a test case
-that uses `rpn_parse` to `test_expr.py`:
+that uses `rpn_parse` to `test_rpncalc.py`:
 
 ```python
 class TestRPNAssignment(unittest.TestCase):
 
     def test_env_global(self):
         exp = rpn_parse("5 4 3 * + x =")[0]
-        self.assertEqual(str(exp), "x = (5 + (4 * 3))")
+        self.assertEqual(str(exp), "(x = (5 + (4 * 3)))")
         self.assertEqual(exp.eval(), IntConst(17))
         exp = rpn_parse("x 3 +")[0]
         self.assertEqual(exp.eval(), IntConst(20))
@@ -1182,10 +1378,18 @@ class TestRPNAssignment(unittest.TestCase):
 
 ## Are we done yet? 
 
-At this point we have a working RPN calculator. 
-It is ready to turn in.   
+At this point we have a full working RPN calculator. 
+The `rpn_parse` function in `rpncalc.py` contains cases for
+integer constants, binary operations, unary operations,
+variables, and assignments.  Our `Expr` subclasses include
+`IntConst`, `Var`, and `Assign`, as well as
+subclasses `Plus`, `Times`, `Minus`, and `Div` of `BinOp` and
+subclasses `Neg` and `Abs` of `UnOp`. 
 
-##Bonus: An algebraic calculator
+It is ready to turn in.   You will turn in `expr.py` and
+`rpncalc.py`.  You will not turn in the test suites. n
+
+## Bonus: An algebraic calculator
 
 I'd like to also 
 create a calculator that takes algebraic notation. 
