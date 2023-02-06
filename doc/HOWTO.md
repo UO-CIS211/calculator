@@ -710,7 +710,7 @@ in `BinOp` can be:
 
 ```python
     def __str__(self) -> str:
-        return f"({self.left} {self.op_sym} {self.right})"
+        return f"({self.left} {self.symbol} {self.right})"
 ```
 
 Now the `__str__` method can be removed from the `Plus` class. 
