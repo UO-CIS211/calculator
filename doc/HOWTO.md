@@ -276,6 +276,17 @@ At this point your `expr.py` file contains the abstract class `Expr`
 and the concrete subclass `IntConst`.  Your `test_expr.py` contains 
 test cases for `IntConst`. 
 
+### Question (answer in questions.md)
+Consider the following code. 
+```python
+five = IntConst(5)
+print(5 == five)   # Comparison 1
+print(five == 5)   # Comparison 2
+```
+
+Does the `__eq__` method of `IntConst` get called only in Comparison 
+1, only in Comparison 2, in both, or in neither? 
+
 ### Plus
 
 We'll start with one binary operation, 
@@ -348,7 +359,7 @@ and ```eval```, all within class `TestPlus`.
 
 And now I can write the class ```Plus``` itself.   I'll leave the 
 constructor to you ... it should store a left operand as ```self.left```
-and a right operand as ```self.right```.  
+and a right operand as ```self.right```.
 
 ### ```__str__``` is recursive
 
@@ -390,6 +401,12 @@ we can (and often do) say that the expression structure is a
 The ```__repr__``` method works much like the ```__str__``` method; 
 I'll leave that to you to write. 
 
+
+### Question (answer in questions.md)
+I noted that `__str__` method of
+`Plus` is recursive, but I don't see an explicit call to `__str__` 
+in the code I provided.  Where is it? 
+
 ### Expressions are trees
 
 One of the ways we can visualize an expression is as a tree.  
@@ -398,15 +415,34 @@ typically draw trees
 upside down, with the "root" or "root node" at the top and 
 "leaves" or "leaf nodes" at the bottom.  (Occasionally 
 we'll draw them sideways, with the root on the left 
-and leaves on the right.) 
+and leaves on the right.)    The algebraic expression (3+4)*5 can be 
+viewed as a tree with the operator "Times" at the top, connected to
+subtrees for "Plus" (further connected to 3 and 4) on the left and 5 
+on the right. 
 
-![Expressions are Trees](img/Expr-Tree.png)
+![Image of tree as described just above, with "Times" at the top.
+](img/Expr-Tree.png
+"Expressions are trees")
 
 Viewed this way, the base case of the recursion is in the
-methods in the leaf nodes, and all other nodes perform the recursive
+methods in the leaf nodes, the bottom-most nodes in the tree. All 
+other nodes perform the recursive
 case.  You can view the recursive computation as "walking" the tree,
 systematically working its way down to the leaves and returning
 values upwards. 
+
+There are other ways to express tree structure.
+In prefix notation, the expression tree above is 
+"(Times (Plus 3 4) 5)". 
+In Polish postfix 
+notation it is "3 4 Plus 5 Times".  Trees can also be represented as 
+lists, with indentation level to show hiearchy.  The same tree could 
+be represented as 
+- Times
+  - Plus
+    - 3
+    - 4
+  - 5
 
 ### ```eval``` is recursive
 
@@ -443,6 +479,10 @@ functionality in the Python console:
 IntConst(12)
 ```
 
+### Question (answer in questions.md)
+
+How do we know that the `eval` method above will not loop forever? 
+
 ## Parsing input (first cut)
 
 We could go on building up the ```expr.py``` module and 
@@ -470,7 +510,7 @@ are just the parts that make up the expression.
 
  I have provided you a lexical analysis module, `lex.py`, to save
 time and help you focus on the main issues in this 
- project. It provides a class TokenStream for obtaining each 
+ project. It provides a class `TokenStream` for obtaining each 
  lexeme (token), one by one.  Internally, `lex.py` uses 
  the *regular expression* package `re` to break the 
  input into tokens.  We will study regular expressions 
@@ -532,7 +572,8 @@ as possible.  We can build a very, very simple parser using
 
 In RPN, an operator like '+' is written after its operands.  
 Instead of ```3+4```, we write ```3 4 +```.  We can write 
-```(3*4)/6``` as ```3 4 * 6 /```, or ```3*(4/6)``` as ```3 4 6 / *```. 
+```(3*4)/6``` as ```3 4 * 6 /```.  We can write
+```3*(4/6)``` as ```3 4 6 / *```. 
 Notice that we don't need parentheses! 
 
 An RPN parser uses a stack structure.  An operand is "pushed" 
@@ -545,38 +586,54 @@ called ```pop```.)
 Let's consider what the sequence should be for ````6 5 + 4 +```. 
 Initially the stack is empty. 
 
-![Initial parse state](img/RPN-calc-1.png)
+![The stack is empty. "6 5 + 4 +" are waiting in the token stream
+](img/RPN-calc-1.png
+"Initial parse state")
 
 We process the first token (6) and push a corresponding ```IntConst```
 object
 
-![After pushing an IntConst](img/RPN-calc-2.png)
+![The stack has one element, IntConst(6).  "5 + 4 +" are waiting
+in the token streem
+](img/RPN-calc-2.png
+"After pushing an IntConst")
 
 We likewise push the next value.
 
-![After pushing 6 and 5](img/RPN-calc-3.png)
+![The stack has two items, IntConst(5) on top and IntConst(6) below it.
+"+ 4 +" are waiting in the token stream.
+](img/RPN-calc-3.png "After pushing 6 and 5")
 
 The next token is '+'.  We want to create a ```Plus``` node for it.  Where 
 are the left and right operands?  On the stack.  We pop them, build the ```Plus```
 object, and push it onto the stack. 
 
-![Plus](img/RPN-calc-4.png)
+![On the stack is one item, a Plus node, but it has arrows
+to the IntConst(5) and IntConst(6) nodes, which are no longer
+on the stack.
+](img/RPN-calc-4.png "Plus")
 
 (Here `Plus` is the root of a tree 
 that we will draw sideways so that we can 
 draw the stack vertically.) 
 
-Next we have +another integer, 4.  We push it onto the stack just as 
+Next from the token stream we have another integer, 4.
+We push it onto the stack just as 
 we did with the others. 
 
-![Another integer](img/RPN-calc-5.png)
+![The top element in the stack is IntConst(4).  Below it
+is the Plus node with its pointers to the two IntConst nodes.
+](img/RPN-calc-5.png "Another integer")
 
 Finally we have another '+'.  We treat it exactly like the 
 first: Pop the two operands, build the ```Plus``` object, 
 and push it.  The only difference is that this time the 
 left operand will be another ```Plus``` node. 
 
-![Second Plus](img/RPN-calc-6.png)
+![Now the stack holds just one item, a "Plus" node.
+This Plus node has arrows to IntConst(4), and to the other
+Plus node, which in turn has arrows to IntConst(5) and IntConst(6)
+](img/RPN-calc-6.png "Second Plus")
 
 At the conclusion of this, if the input was 
 syntactically correct, the top element of the stack 
@@ -597,6 +654,13 @@ Expression (return to quit):6 5 + 4 +
 ((6 + 5) + 4) => 15
 Expression (return to quit):
 ```
+#### Question to answer in questions.md
+
+The constructor for a `Plus` node says that it takes two `Expr` nodes
+as arguments,
+but we are passing it `IntConst` and `Plus` nodes.  Is this ok?
+Why or why not? 
+
 ## Back to Expr
 
 Now we have a way of building ```Expr``` objects and 
@@ -635,7 +699,9 @@ It gives us too many chances to make errors, particularly some time
 in the future when we change some of that code but fail to
 change it everywhere consistently.  
 
-![Unhappy programmer](img/unhappy.png)
+![Frowny face](img/unhappy.png 
+"Frowny face with caption 'Actual photograph of programmer reading 
+repetitive code")
 
 ## DRY it out! 
 
@@ -674,7 +740,9 @@ but let's start simpler with ```__str__```.  The only difference between
 the string representation of ```Plus``` and the string representation of 
 ```Times``` is the symbol, '+' for ```Plus``` and '*' for ```Times```. 
 
-![Differences between string methods in Plus and Times](img/binop-refactor.png)
+![Side-by-side code of Times and Plus, as explained below](
+img/binop-refactor.png
+"Differences between string methods in Plus and Times")
 
 The constructor is the same (setting the `left` and `right` 
 instance variables) and the `__str__` and `__repr__` methods 
@@ -694,7 +762,7 @@ class BinOp(Expr):
         self.symbol = symbol
 ```
 Now the constructors of concrete subclasses can delegate to the
-the constructor of `BinOp`, providing the appropriate symbol: 
+constructor of `BinOp`, providing the appropriate symbol: 
 
 ```python
 class Plus(BinOp):
@@ -720,10 +788,28 @@ how we obtained the name of a class in abstract methods in class `Expr`
 as `self.__class__.__name__`.  We can use that to build a generic 
 `__repr__` method in class `BinOp`: 
 
+```python
+    def __repr__(self) -> str:
+        class_name = self.__class__.__name__
+        return f"{class_name}({repr(self.left)}, {repr(self.right)})"
+```
 
+Now our concrete classes for binary operators can inherit
+the `__repr__` method from `BinOp` rather than each providing
+their own.   We can similarly factor out the `__str__` methods
+by passing the operator symbol from the constructor of
+a concrete class for a binary operator to the abstract
+`BinOp` class, like this: 
 
-We will factor the `__repr__` methods similarly, and do the same 
-for all the binary operators.  
+```python
+class Plus(BinOp):
+    """Represents left + right"""
+    def __init__(self, left: Expr, right: Expr):
+        super().__init__(left, right, symbol="+")
+```
+
+Our concrete classes for classes like `Plus` and `Minus`
+are getting smaller and simpler! 
 
 ### Checkpoint
 
@@ -753,7 +839,6 @@ We will need an abstract method `_apply` in the `BinOp` class:
             "Each concrete BinOp class must define '_apply'")
 ```
 
-
 Then the  concrete subclasses like `Plus` can override it, for example
 
 ```python
@@ -782,7 +867,13 @@ additional binary  operations like ```Remainder```, implemented by
 ```%``` in Python. Adding a new binary operator in ```expr.py```
 has become very simple.
 
-![It's DRY now](img/happy.png)
+#### Question to answer in questions.md
+
+Method `_apply` returns an `int` rather than an `IntConst`.
+How does the result of a binary operation become an
+`IntConst` object? 
+
+![Smiley face decoration](img/happy.png "Happy programmer")
 
 We can add the following test cases in `test_expr.py` to increase our 
 confidence that we have implemented all four operations correctly: 
@@ -869,6 +960,14 @@ class TestUnOp(unittest.TestCase):
 At this point, in addition to the `Expr` and all the `BinOp` classes,
 you have `UnOp` and its concrete subclasses `Neg`, and `Abs`.  
 There are now 17 test cases. 
+
+#### Question to answer in questions.md
+
+We noted above that an expression like `2+(5*3)` could
+be expressed algebraically (this is also called "infix" notation),
+in reverse Polish notation (also called "postfix"), or
+in "prefix" notation like `+ 2 * 5 3`.  Which of these notations
+have we adopted for the `__str__` methods of our `Expr` classes?
 
 ## Enhancing the RPN Calculator
 
@@ -1126,6 +1225,13 @@ you now have `rpn_parse`, `calc`, and `rpn_calc` in `rpncalc.py`.
 A separate test file `test_rpncalc.py` has five test cases, in 
 addition to those in `test_expr.py`.
 
+#### Question to answer in questions.md
+
+Our postfix notation uses "~" for negation and reserves
+"-" for subtraction.  Why? Can you give an example 
+postfix (reverse Polish notation) expression that
+would be ambiguous if we used "-" as both a 
+unary and binary operation? 
 
 ## Adding variables
 
@@ -1314,6 +1420,7 @@ class TestVars(unittest.TestCase):
         self.assertEqual(repr(exp), "Assign(Var(v), Plus(IntConst(5), Var(w)))")
 ```
 
+
 At this point our `text_expr.py` contains 19 test case methods. 
 
 To parse assignments, I need to add cases in ```rpn_calc``` for 
@@ -1387,7 +1494,17 @@ subclasses `Plus`, `Times`, `Minus`, and `Div` of `BinOp` and
 subclasses `Neg` and `Abs` of `UnOp`. 
 
 It is ready to turn in.   You will turn in `expr.py` and
-`rpncalc.py`.  You will not turn in the test suites. n
+`rpncalc.py`.  You will not turn in the test suites. 
+
+#### Question to answer in questions.md
+
+Suppose we wanted to add exponentiation to our calculator, so
+that the RPN expression `5 2 ^` would evaluate to 25 (5 squared)
+and `5 3 ^` would evaluate to 125 (5 cubed).  Assume the lexer
+returns a token `lex.TokenPat.POWER`.  What new class would I
+need to add to `expr.py`, and what would it be a subclass of? 
+What change would I need to make to `rpncalc.py`?
+
 
 ## Bonus: An algebraic calculator
 
