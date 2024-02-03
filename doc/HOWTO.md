@@ -1461,9 +1461,9 @@ With this in place, I can now make calculations involving variables:
 
 ```
 Expression (return to quit): 24 60 * 60 * seconds_per_day =
-seconds_per_day = ((24 * 60) * 60) => 86400
+(seconds_per_day = ((24 * 60) * 60)) => 86400
 Expression (return to quit):7 seconds_per_day * seconds_per_week =
-seconds_per_week = (7 * seconds_per_day) => 604800
+(seconds_per_week = (7 * seconds_per_day)) => 604800
 Expression (return to quit):seconds_per_week
 seconds_per_week => 604800
 Expression (return to quit):
