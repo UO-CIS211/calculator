@@ -1100,8 +1100,9 @@ parses a line and then executes it, printing a result.
 I can't easily use the `calc` function in a test 
 case, because it prints its result instead of returning 
 a value.  So, to make testing easier, I will factor 
-out the expression parsing part of `calc`.   The 
-new `calc` will be 
+out the expression parsing part of `calc`.   Most of the
+original `calc` will be copied into a new function `rpn_parse`.
+The new `calc` will be cut down to: 
 
 ```python
 def calc(text: str):
